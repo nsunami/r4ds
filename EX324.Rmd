@@ -1,0 +1,71 @@
+---
+title: "Exercise 3.2.4"
+output: html_notebook
+---
+
+Load the `tidyverse` library
+
+```{r}
+library(tidyverse)
+```
+
+
+## Question 1: Run `ggplot(data = mpg)`. What do you see?
+
+```{r}
+library(tidyverse)
+ggplot(data=mpg)
+```
+
+Answer: No graph
+
+
+## Question 2: How many rows are in mtcars? How many columns?
+### Rows:
+Use `nrow` to count the number of rows in a data frame.
+```{r}
+mtcars_nrow <- nrow(mtcars)
+mtcars_nrow
+```
+The answer is `r mtcars_nrow` rows.
+
+### Columns:
+Use `ncol` to count the number of columns in a data frame.
+
+```{r}
+mtcars_ncol <- ncol(mtcars)
+mtcars_ncol
+```
+
+The answer is `r mtcars_ncol` rows.
+
+
+## Question 3: What does the drv variable describe? Read the help for ?mpg to find out.
+```{r}
+?mpg
+
+# f = front-wheel drive, r = rear wheel drive, 4 = 4wd
+```
+
+## Question 4: Make a scatterplot of hwy versus cyl.
+```{r}
+ggplot(mpg, aes(x = cyl, y = hwy)) + 
+  geom_point()
+
+#also
+ggplot(mpg, aes(x = cyl, y = hwy)) + 
+  geom_point()
+```
+
+## Question 5: What happens if you make a scatterplot of class versus drv? Why is the plot not useful?
+
+```{r}
+ggplot(mpg, aes(x = drv, y = class)) + 
+  geom_point()
+
+#also
+ggplot(mpg, aes(x = class, y = drv)) + 
+  geom_point()
+```
+
+This scatter plot may not be useful because the dots on the graph merely represent the availability of data within each combination of categories.  
