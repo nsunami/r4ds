@@ -1,0 +1,398 @@
+---
+title: Chapter 2 - Data Visualization
+author: Package Build
+date: '2023-05-18'
+slug: chapter-2
+categories: []
+tags: []
+---
+
+> [R4DS Chapter](https://r4ds.hadley.nz/data-visualize.html)
+
+# Summary
+
+- `ggplot2` implements grammer of graphics
+
+
+# First Steps
+
+```{r include=FALSE}
+library(tidyverse)
+library(palmerpenguins)
+library(ggthemes)
+```
+
+Inspect `penguins`
+
+```{r}
+# trusting it is a tibble and thus not worrying about flooding the output 
+penguins
+```
+
+```{r}
+glimpse(penguins)
+```
+
+Check unique values for the factors
+```{r}
+penguins |>
+  select_if(is.factor) |>
+  map(unique)
+```
+
+Creating a ggplot—Note that ggplot with aesthetics without a geom renders axes that correspond with the data range as below.
+
+```{r}
+penguins |>
+  ggplot(aes(x = flipper_length_mm, y = body_mass_g))
+```
+
+End results
+
+
+Notes:
+
+- I initially forget to specify the label for `shape` as "Species`, which resulted in rendering two sets of keys
+
+- I initally used `caption` in `labs()` for the text right below the title, but it should have been `subtitle` 
+
+```{r}
+penguins |>
+  ggplot(aes(x = flipper_length_mm,
+             y = body_mass_g)) +
+  geom_smooth(method = "lm") +
+  geom_point(aes(color = species, shape = species)) +
+  labs(title = "Body mass and flipper length",
+       subtitle = "Dimensions for Adelie, Chinstrap, and Gentoo Penguins",
+       color = "Species",
+       shape = "Species",
+       x = "Flipper length (mm)",
+       y = "Body mass (g)") +
+  scale_color_colorblind()
+```
+
+
+
+# Exercises (2.2.5)
+
+
+## 1. How many rows are in `penguins`? How many columns?
+
+```{r}
+penguins_nrow <- nrow(penguins)
+penguins_ncol <- ncol(penguins)
+
+
+```
+
+`r str_glue("There are {penguins_nrow} rows and {penguins_ncol} columns in penguins")`
+
+## 2. What does the bill_depth_mm variable in the penguins data frame describe? Read the help for ?penguins to find out.
+
+According to the help file, the `bill_depth_mm` variable refers to 
+
+> a number denoting bill depth (millimeters)
+
+## 3. Make a scatterplot of bill_depth_mm vs. bill_length_mm. That is, make a scatterplot with bill_depth_mm on the y-axis and bill_length_mm on the x-axis. Describe the relationship between these two variables.
+
+```{r}
+penguins |>
+  ggplot(aes(x = bill_length_mm,
+             y = bill_depth_mm)) +
+  geom_point(aes(color = species))
+```
+
+The bill length and bill depth seems to be unrelated at first, however, they may be positively correlated within species.
+
+## 4. What happens if you make a scatterplot of species vs. bill_depth_mm? What might be a better choice of geom?
+
+```{r}
+penguins |>
+  ggplot(aes(x = species,
+             y = bill_depth_mm)) +
+  geom_point()
+```
+
+Boxplots may be a better choice of geom, or in addition
+
+```{r}
+penguins |>
+  ggplot(aes(x = species,
+             y = bill_depth_mm)) +
+  geom_boxplot() +
+  geom_point(position = "jitter", alpha = .3)
+```
+A better option may be to use [raincloud plots](https://www.cedricscherer.com/2021/06/06/visualizing-distributions-with-raincloud-plots-and-how-to-create-them-with-ggplot2/)
+
+
+## 5. Why does the following give an error and how would you fix it?
+
+```{r eval=FALSE}
+ggplot(data = penguins) + 
+  geom_point()
+```
+
+It's because there are not aesthetics specified. We can fix it as:
+
+```{r}
+ggplot(data = penguins, 
+       aes(x = bill_length_mm,
+           y = bill_depth_mm)) + 
+  geom_point()
+```
+
+
+## 6. What does the na.rm argument do in geom_point()? What is the default value of the argument? Create a scatterplot where you successfully use this argument set to TRUE.
+
+If the `na.rm` argument is `FALSE`, missing values will be removed with a warning. If it is `TRUE`, they are silently removed.
+The default value for the `na.rm` argument is FALSE. 
+
+```{r}
+penguins |>
+  ggplot(aes(x = flipper_length_mm, 
+             y = body_mass_g)) +
+  geom_point(na.rm = TRUE)
+```
+## 7. Add the following caption to the plot you made in the previous exercise: “Data come from the palmerpenguins package.” Hint: Take a look at the documentation for labs().
+
+```{r}
+penguins |>
+  ggplot(aes(x = flipper_length_mm, 
+             y = body_mass_g)) +
+  geom_point(na.rm = TRUE) +
+  labs(caption = "Data come from the palmerpenguins package.")
+
+```
+
+## 8. Recreate the following visualization. What aesthetic should bill_depth_mm be mapped to? And should it be mapped at the global level or at the geom level?
+
+`bill_depth_mm` should be mapped to `color` aesthetic. It should be mapped at the geom level, since `geom_point` is the only one using the aesthetics (not `geom_smooth`)
+
+```{r}
+penguins |>
+  ggplot(aes(flipper_length_mm, body_mass_g)) +
+  geom_point(aes(color = bill_depth_mm), na.rm = TRUE) +
+  geom_smooth(na.rm = TRUE)
+```
+
+## 9. Run this code in your head and predict what the output will look like. Then, run the code in R and check your predictions.
+
+I predict a scatterplot with a loess line (without an error band), showing filipper length on the axis, body mass on the y axis, and colored by island (also for the loess line).
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = island)
+) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+## 10. Will these two graphs look different? Why/why not?
+
+These graphs looks identical. The first one specifies the data and  aesthetics at the global level. The second one specifies the same data and aesthetic at geom-level. I'd prefer the first one for simplicity.
+
+
+# Visualizing distributions 
+
+- Do not forget about `fct_infreq`!
+
+- `geom_density` is useful to detect modes and skew, as an alternative to `geom_histogram`
+
+# Exercises 2.4.3
+
+## 1. Make a bar plot of species of penguins, where you assign species to the y aesthetic. How is this plot different?
+
+It plots a horizontal bar plot, which mames it easier to compare across different categories. 
+
+
+```{r}
+penguins |>
+  ggplot(aes(y = fct_infreq(species))) +
+  geom_bar()
+```
+
+## 2. How are the following two plots different? Which aesthetic, color or fill, is more useful for changing the color of bars?
+
+```{r, eval=FALSE}
+ggplot(penguins, aes(x = species)) +
+  geom_bar(color = "red")
+
+ggplot(penguins, aes(x = species)) +
+  geom_bar(fill = "red")
+```
+
+The first plot only colors the outline of the bars (`color`) whereas the second plot colors the whole bars (`fill`). `fill` is more useful for changing the color of bars.
+
+
+## 3. What does the bins argument in geom_histogram() do?
+
+The `bins` argument in `geom_histogram()` specifies the number of bins. This is in contrast to the `binwidth` argument, which specifies the width of the bins.
+
+
+## 4. Make a histogram of the carat variable in the diamonds dataset that is available when you load the tidyverse package. Experiment with different binwidths. What binwidth reveals the most interesting patterns?
+
+The bindwidth of 1/100 seems to produce an interesting plot.
+
+```{r}
+diamonds |>
+  ggplot(aes(carat)) +
+  geom_histogram(binwidth = 1/100)
+```
+
+# Visualizing relationships
+
+- Using `geom_density()` with `color`, `fill`, and lower `alpha` produces a nice-looking plot comparing different distributions
+
+- To produce a stacked bar plot with proportions, use `position = "fill"` in `geom_bar()`
+
+# Exercises 2.5.5
+
+## 1. The mpg data frame that is bundled with the ggplot2 package contains 234 observations collected by the US Environmental Protection Agency on 38 car models. Which variables in mpg are categorical? Which variables are numerical? (Hint: Type ?mpg to read the documentation for the dataset.) How can you see this information when you run mpg?
+
+
+### Categorial variables
+
+- `manufacturer`
+- `model`
+- `model`
+- `trans`
+- `drv`
+- `fl`
+- `class`
+
+### Numeric variables
+
+- `displ`
+- `year`
+- `cyl`
+- `cty`
+- `hwy`
+
+When running `mpg`, we can see that categorical variables are `<chr>`, and numeric variables are `<int>` or `<dbl>`.
+
+
+## 2. Make a scatterplot of hwy vs. displ using the mpg data frame. Next, map a third, numerical variable to color, then size, then both color and size, then shape. How do these aesthetics behave differently for categorical vs. numerical variables?
+
+
+```{r}
+mpg |>
+  ggplot(aes(x = displ,
+             y = hwy)) +
+  geom_point()
+
+# Third numeric value is cyl
+mpg |>
+  ggplot(aes(x = displ,
+             y = hwy,
+             color = cyl)) +
+  geom_point()
+
+mpg |>
+  ggplot(aes(x = displ,
+             y = hwy,
+             size = cyl)) +
+  geom_point()
+
+mpg |>
+  ggplot(aes(x = displ,
+             y = hwy,
+             color = cyl,
+             size = cyl)) +
+  geom_point()
+```
+
+
+In categorical variables, `color` creates distinct colors, whereas in numeric variable shades.
+
+
+## 3. In the scatterplot of hwy vs. displ, what happens if you map a third variable to linewidth?
+
+Nothing happens - since there are no linewidth in `geom_point()`
+
+```{r}
+mpg |>
+  ggplot(aes(x = displ,
+             y = hwy,
+             linewidth = cyl)) +
+  geom_point()
+```
+
+## 4. What happens if you map the same variable to multiple aesthetics?
+
+The multiple asthetics follow the pattern of the same variable.
+
+## 5. Make a scatterplot of bill_depth_mm vs. bill_length_mm and color the points by species. What does adding coloring by species reveal about the relationship between these two variables? What about faceting by species?
+
+```{r}
+penguins |>
+  ggplot(aes(x = bill_length_mm,
+             y = bill_depth_mm,
+             color = species)) +
+  geom_point()
+```
+
+These plots reveal the relationship between these two variables within species. 
+
+
+## 6. Why does the following yield two separate legends? How would you fix it to combine the two legends?
+
+It's because the label "Species" is only specified for the `color` aesthetics. To fix this, we can assign the same label to the `shape` aesthetics. 
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(
+    x = bill_length_mm, y = bill_depth_mm, 
+    color = species, shape = species
+  )
+) +
+  geom_point() +
+  labs(color = "Species",
+       shape = "Species")
+```
+
+
+## 7. Create the two following stacked bar plots. Which question can you answer with the first one? Which question can you answer with the second one?
+
+
+```{r}
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar(position = "fill")
+ggplot(penguins, aes(x = species, fill = island)) +
+  geom_bar(position = "fill")
+
+```
+
+In the first one, we can answer which of the species is the most prevalent within each island. In the second plot, we can answer which island is the most popular place within species.
+
+
+# Exercies 2.6.1
+
+
+## 1. Run the following lines of code. Which of the two plots is saved as mpg-plot.png? Why?
+
+```{r, eval=FALSE}
+ggplot(mpg, aes(x = class)) +
+  geom_bar()
+ggplot(mpg, aes(x = cty, y = hwy)) +
+  geom_point()
+ggsave("mpg-plot.png")
+```
+
+The second plot will be saved because it will be the most recent plot.
+
+## 2. What do you need to change in the code above to save the plot as a PDF instead of a PNG? How could you find out what types of image files would work in ggsave()?
+
+We can just change the extension of the output file name to have `.pdf`.
+
+See the `device` for allowed file types. 
+
+```{r}
+ggplot(mpg, aes(x = cty, y = hwy)) +
+  geom_point()
+ggsave("mpg-plot.pdf")
+```
+
+
+
