@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>Chapter 2 - Data Visualization - A Hugo website</title>
+<meta property="og:title" content="Chapter 2 - Data Visualization - A Hugo website">
+
+
+  <link href='/favicon.ico' rel='icon' type='image/x-icon'/>
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">10 min read</span>
+    
+
+    <h1 class="article-title">Chapter 2 - Data Visualization</h1>
+
+    
+    <span class="article-date">2023-05-18</span>
+    
+
+    <div class="article-content">
+      
+
+
+<blockquote>
+<p><a href="https://r4ds.hadley.nz/data-visualize.html">R4DS Chapter</a></p>
+</blockquote>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<ul>
+<li><code>ggplot2</code> implements grammer of graphics</li>
+</ul>
+</div>
+<div id="first-steps" class="section level1">
+<h1>First Steps</h1>
+<p>Inspect <code>penguins</code></p>
+<pre class="r"><code># trusting it is a tibble and thus not worrying about flooding the output 
+penguins</code></pre>
+<pre><code>## # A tibble: 344 × 8
+##    species island    bill_length_mm bill_depth_mm flipper_length_mm body_mass_g
+##    &lt;fct&gt;   &lt;fct&gt;              &lt;dbl&gt;         &lt;dbl&gt;             &lt;int&gt;       &lt;int&gt;
+##  1 Adelie  Torgersen           39.1          18.7               181        3750
+##  2 Adelie  Torgersen           39.5          17.4               186        3800
+##  3 Adelie  Torgersen           40.3          18                 195        3250
+##  4 Adelie  Torgersen           NA            NA                  NA          NA
+##  5 Adelie  Torgersen           36.7          19.3               193        3450
+##  6 Adelie  Torgersen           39.3          20.6               190        3650
+##  7 Adelie  Torgersen           38.9          17.8               181        3625
+##  8 Adelie  Torgersen           39.2          19.6               195        4675
+##  9 Adelie  Torgersen           34.1          18.1               193        3475
+## 10 Adelie  Torgersen           42            20.2               190        4250
+## # ℹ 334 more rows
+## # ℹ 2 more variables: sex &lt;fct&gt;, year &lt;int&gt;</code></pre>
+<pre class="r"><code>glimpse(penguins)</code></pre>
+<pre><code>## Rows: 344
+## Columns: 8
+## $ species           &lt;fct&gt; Adelie, Adelie, Adelie, Adelie, Adelie, Adelie, Adel…
+## $ island            &lt;fct&gt; Torgersen, Torgersen, Torgersen, Torgersen, Torgerse…
+## $ bill_length_mm    &lt;dbl&gt; 39.1, 39.5, 40.3, NA, 36.7, 39.3, 38.9, 39.2, 34.1, …
+## $ bill_depth_mm     &lt;dbl&gt; 18.7, 17.4, 18.0, NA, 19.3, 20.6, 17.8, 19.6, 18.1, …
+## $ flipper_length_mm &lt;int&gt; 181, 186, 195, NA, 193, 190, 181, 195, 193, 190, 186…
+## $ body_mass_g       &lt;int&gt; 3750, 3800, 3250, NA, 3450, 3650, 3625, 4675, 3475, …
+## $ sex               &lt;fct&gt; male, female, female, NA, female, male, female, male…
+## $ year              &lt;int&gt; 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007…</code></pre>
+<p>Check unique values for the factors</p>
+<pre class="r"><code>penguins |&gt;
+  select_if(is.factor) |&gt;
+  map(unique)</code></pre>
+<pre><code>## $species
+## [1] Adelie    Gentoo    Chinstrap
+## Levels: Adelie Chinstrap Gentoo
+## 
+## $island
+## [1] Torgersen Biscoe    Dream    
+## Levels: Biscoe Dream Torgersen
+## 
+## $sex
+## [1] male   female &lt;NA&gt;  
+## Levels: female male</code></pre>
+<p>Creating a ggplot—Note that ggplot with aesthetics without a geom renders axes that correspond with the data range as below.</p>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = flipper_length_mm, y = body_mass_g))</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>End results</p>
+<p>Notes:</p>
+<ul>
+<li><p>I initially forget to specify the label for <code>shape</code> as “Species`, which resulted in rendering two sets of keys</p></li>
+<li><p>I initally used <code>caption</code> in <code>labs()</code> for the text right below the title, but it should have been <code>subtitle</code></p></li>
+</ul>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = flipper_length_mm,
+             y = body_mass_g)) +
+  geom_smooth(method = &quot;lm&quot;) +
+  geom_point(aes(color = species, shape = species)) +
+  labs(title = &quot;Body mass and flipper length&quot;,
+       subtitle = &quot;Dimensions for Adelie, Chinstrap, and Gentoo Penguins&quot;,
+       color = &quot;Species&quot;,
+       shape = &quot;Species&quot;,
+       x = &quot;Flipper length (mm)&quot;,
+       y = &quot;Body mass (g)&quot;) +
+  scale_color_colorblind()</code></pre>
+<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
+<pre><code>## Warning: Removed 2 rows containing non-finite values (`stat_smooth()`).</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="exercises-2.2.5" class="section level1">
+<h1>Exercises (2.2.5)</h1>
+<div id="how-many-rows-are-in-penguins-how-many-columns" class="section level2">
+<h2>1. How many rows are in <code>penguins</code>? How many columns?</h2>
+<pre class="r"><code>penguins_nrow &lt;- nrow(penguins)
+penguins_ncol &lt;- ncol(penguins)</code></pre>
+<p>There are 344 rows and 8 columns in penguins</p>
+</div>
+<div id="what-does-the-bill_depth_mm-variable-in-the-penguins-data-frame-describe-read-the-help-for-penguins-to-find-out." class="section level2">
+<h2>2. What does the bill_depth_mm variable in the penguins data frame describe? Read the help for ?penguins to find out.</h2>
+<p>According to the help file, the <code>bill_depth_mm</code> variable refers to</p>
+<blockquote>
+<p>a number denoting bill depth (millimeters)</p>
+</blockquote>
+</div>
+<div id="make-a-scatterplot-of-bill_depth_mm-vs.-bill_length_mm.-that-is-make-a-scatterplot-with-bill_depth_mm-on-the-y-axis-and-bill_length_mm-on-the-x-axis.-describe-the-relationship-between-these-two-variables." class="section level2">
+<h2>3. Make a scatterplot of bill_depth_mm vs. bill_length_mm. That is, make a scatterplot with bill_depth_mm on the y-axis and bill_length_mm on the x-axis. Describe the relationship between these two variables.</h2>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = bill_length_mm,
+             y = bill_depth_mm)) +
+  geom_point(aes(color = species))</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>The bill length and bill depth seems to be unrelated at first, however, they may be positively correlated within species.</p>
+</div>
+<div id="what-happens-if-you-make-a-scatterplot-of-species-vs.-bill_depth_mm-what-might-be-a-better-choice-of-geom" class="section level2">
+<h2>4. What happens if you make a scatterplot of species vs. bill_depth_mm? What might be a better choice of geom?</h2>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = species,
+             y = bill_depth_mm)) +
+  geom_point()</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Boxplots may be a better choice of geom, or in addition</p>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = species,
+             y = bill_depth_mm)) +
+  geom_boxplot() +
+  geom_point(position = &quot;jitter&quot;, alpha = .3)</code></pre>
+<pre><code>## Warning: Removed 2 rows containing non-finite values (`stat_boxplot()`).</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-10-1.png" width="672" />
+A better option may be to use <a href="https://www.cedricscherer.com/2021/06/06/visualizing-distributions-with-raincloud-plots-and-how-to-create-them-with-ggplot2/">raincloud plots</a></p>
+</div>
+<div id="why-does-the-following-give-an-error-and-how-would-you-fix-it" class="section level2">
+<h2>5. Why does the following give an error and how would you fix it?</h2>
+<pre class="r"><code>ggplot(data = penguins) + 
+  geom_point()</code></pre>
+<p>It’s because there are not aesthetics specified. We can fix it as:</p>
+<pre class="r"><code>ggplot(data = penguins, 
+       aes(x = bill_length_mm,
+           y = bill_depth_mm)) + 
+  geom_point()</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+<div id="what-does-the-na.rm-argument-do-in-geom_point-what-is-the-default-value-of-the-argument-create-a-scatterplot-where-you-successfully-use-this-argument-set-to-true." class="section level2">
+<h2>6. What does the na.rm argument do in geom_point()? What is the default value of the argument? Create a scatterplot where you successfully use this argument set to TRUE.</h2>
+<p>If the <code>na.rm</code> argument is <code>FALSE</code>, missing values will be removed with a warning. If it is <code>TRUE</code>, they are silently removed.
+The default value for the <code>na.rm</code> argument is FALSE.</p>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = flipper_length_mm, 
+             y = body_mass_g)) +
+  geom_point(na.rm = TRUE)</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-13-1.png" width="672" />
+## 7. Add the following caption to the plot you made in the previous exercise: “Data come from the palmerpenguins package.” Hint: Take a look at the documentation for labs().</p>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = flipper_length_mm, 
+             y = body_mass_g)) +
+  geom_point(na.rm = TRUE) +
+  labs(caption = &quot;Data come from the palmerpenguins package.&quot;)</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+</div>
+<div id="recreate-the-following-visualization.-what-aesthetic-should-bill_depth_mm-be-mapped-to-and-should-it-be-mapped-at-the-global-level-or-at-the-geom-level" class="section level2">
+<h2>8. Recreate the following visualization. What aesthetic should bill_depth_mm be mapped to? And should it be mapped at the global level or at the geom level?</h2>
+<p><code>bill_depth_mm</code> should be mapped to <code>color</code> aesthetic. It should be mapped at the geom level, since <code>geom_point</code> is the only one using the aesthetics (not <code>geom_smooth</code>)</p>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(flipper_length_mm, body_mass_g)) +
+  geom_point(aes(color = bill_depth_mm), na.rm = TRUE) +
+  geom_smooth(na.rm = TRUE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula = &#39;y ~ x&#39;</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+</div>
+<div id="run-this-code-in-your-head-and-predict-what-the-output-will-look-like.-then-run-the-code-in-r-and-check-your-predictions." class="section level2">
+<h2>9. Run this code in your head and predict what the output will look like. Then, run the code in R and check your predictions.</h2>
+<p>I predict a scatterplot with a loess line (without an error band), showing filipper length on the axis, body mass on the y axis, and colored by island (also for the loess line).</p>
+<pre class="r"><code>ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = island)
+) +
+  geom_point() +
+  geom_smooth(se = FALSE)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula = &#39;y ~ x&#39;</code></pre>
+<pre><code>## Warning: Removed 2 rows containing non-finite values (`stat_smooth()`).</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+</div>
+<div id="will-these-two-graphs-look-different-whywhy-not" class="section level2">
+<h2>10. Will these two graphs look different? Why/why not?</h2>
+<p>These graphs looks identical. The first one specifies the data and aesthetics at the global level. The second one specifies the same data and aesthetic at geom-level. I’d prefer the first one for simplicity.</p>
+</div>
+</div>
+<div id="visualizing-distributions" class="section level1">
+<h1>Visualizing distributions</h1>
+<ul>
+<li><p>Do not forget about <code>fct_infreq</code>!</p></li>
+<li><p><code>geom_density</code> is useful to detect modes and skew, as an alternative to <code>geom_histogram</code></p></li>
+</ul>
+</div>
+<div id="exercises-2.4.3" class="section level1">
+<h1>Exercises 2.4.3</h1>
+<div id="make-a-bar-plot-of-species-of-penguins-where-you-assign-species-to-the-y-aesthetic.-how-is-this-plot-different" class="section level2">
+<h2>1. Make a bar plot of species of penguins, where you assign species to the y aesthetic. How is this plot different?</h2>
+<p>It plots a horizontal bar plot, which mames it easier to compare across different categories.</p>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(y = fct_infreq(species))) +
+  geom_bar()</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="how-are-the-following-two-plots-different-which-aesthetic-color-or-fill-is-more-useful-for-changing-the-color-of-bars" class="section level2">
+<h2>2. How are the following two plots different? Which aesthetic, color or fill, is more useful for changing the color of bars?</h2>
+<pre class="r"><code>ggplot(penguins, aes(x = species)) +
+  geom_bar(color = &quot;red&quot;)
+
+ggplot(penguins, aes(x = species)) +
+  geom_bar(fill = &quot;red&quot;)</code></pre>
+<p>The first plot only colors the outline of the bars (<code>color</code>) whereas the second plot colors the whole bars (<code>fill</code>). <code>fill</code> is more useful for changing the color of bars.</p>
+</div>
+<div id="what-does-the-bins-argument-in-geom_histogram-do" class="section level2">
+<h2>3. What does the bins argument in geom_histogram() do?</h2>
+<p>The <code>bins</code> argument in <code>geom_histogram()</code> specifies the number of bins. This is in contrast to the <code>binwidth</code> argument, which specifies the width of the bins.</p>
+</div>
+<div id="make-a-histogram-of-the-carat-variable-in-the-diamonds-dataset-that-is-available-when-you-load-the-tidyverse-package.-experiment-with-different-binwidths.-what-binwidth-reveals-the-most-interesting-patterns" class="section level2">
+<h2>4. Make a histogram of the carat variable in the diamonds dataset that is available when you load the tidyverse package. Experiment with different binwidths. What binwidth reveals the most interesting patterns?</h2>
+<p>The bindwidth of 1/100 seems to produce an interesting plot.</p>
+<pre class="r"><code>diamonds |&gt;
+  ggplot(aes(carat)) +
+  geom_histogram(binwidth = 1/100)</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+</div>
+</div>
+<div id="visualizing-relationships" class="section level1">
+<h1>Visualizing relationships</h1>
+<ul>
+<li><p>Using <code>geom_density()</code> with <code>color</code>, <code>fill</code>, and lower <code>alpha</code> produces a nice-looking plot comparing different distributions</p></li>
+<li><p>To produce a stacked bar plot with proportions, use <code>position = "fill"</code> in <code>geom_bar()</code></p></li>
+</ul>
+</div>
+<div id="exercises-2.5.5" class="section level1">
+<h1>Exercises 2.5.5</h1>
+<div id="the-mpg-data-frame-that-is-bundled-with-the-ggplot2-package-contains-234-observations-collected-by-the-us-environmental-protection-agency-on-38-car-models.-which-variables-in-mpg-are-categorical-which-variables-are-numerical-hint-type-mpg-to-read-the-documentation-for-the-dataset.-how-can-you-see-this-information-when-you-run-mpg" class="section level2">
+<h2>1. The mpg data frame that is bundled with the ggplot2 package contains 234 observations collected by the US Environmental Protection Agency on 38 car models. Which variables in mpg are categorical? Which variables are numerical? (Hint: Type ?mpg to read the documentation for the dataset.) How can you see this information when you run mpg?</h2>
+<div id="categorial-variables" class="section level3">
+<h3>Categorial variables</h3>
+<ul>
+<li><code>manufacturer</code></li>
+<li><code>model</code></li>
+<li><code>model</code></li>
+<li><code>trans</code></li>
+<li><code>drv</code></li>
+<li><code>fl</code></li>
+<li><code>class</code></li>
+</ul>
+</div>
+<div id="numeric-variables" class="section level3">
+<h3>Numeric variables</h3>
+<ul>
+<li><code>displ</code></li>
+<li><code>year</code></li>
+<li><code>cyl</code></li>
+<li><code>cty</code></li>
+<li><code>hwy</code></li>
+</ul>
+<p>When running <code>mpg</code>, we can see that categorical variables are <code>&lt;chr&gt;</code>, and numeric variables are <code>&lt;int&gt;</code> or <code>&lt;dbl&gt;</code>.</p>
+</div>
+</div>
+<div id="make-a-scatterplot-of-hwy-vs.-displ-using-the-mpg-data-frame.-next-map-a-third-numerical-variable-to-color-then-size-then-both-color-and-size-then-shape.-how-do-these-aesthetics-behave-differently-for-categorical-vs.-numerical-variables" class="section level2">
+<h2>2. Make a scatterplot of hwy vs. displ using the mpg data frame. Next, map a third, numerical variable to color, then size, then both color and size, then shape. How do these aesthetics behave differently for categorical vs. numerical variables?</h2>
+<pre class="r"><code>mpg |&gt;
+  ggplot(aes(x = displ,
+             y = hwy)) +
+  geom_point()</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<pre class="r"><code># Third numeric value is cyl
+mpg |&gt;
+  ggplot(aes(x = displ,
+             y = hwy,
+             color = cyl)) +
+  geom_point()</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-20-2.png" width="672" /></p>
+<pre class="r"><code>mpg |&gt;
+  ggplot(aes(x = displ,
+             y = hwy,
+             size = cyl)) +
+  geom_point()</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-20-3.png" width="672" /></p>
+<pre class="r"><code>mpg |&gt;
+  ggplot(aes(x = displ,
+             y = hwy,
+             color = cyl,
+             size = cyl)) +
+  geom_point()</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-20-4.png" width="672" /></p>
+<p>In categorical variables, <code>color</code> creates distinct colors, whereas in numeric variable shades.</p>
+</div>
+<div id="in-the-scatterplot-of-hwy-vs.-displ-what-happens-if-you-map-a-third-variable-to-linewidth" class="section level2">
+<h2>3. In the scatterplot of hwy vs. displ, what happens if you map a third variable to linewidth?</h2>
+<p>Nothing happens - since there are no linewidth in <code>geom_point()</code></p>
+<pre class="r"><code>mpg |&gt;
+  ggplot(aes(x = displ,
+             y = hwy,
+             linewidth = cyl)) +
+  geom_point()</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+</div>
+<div id="what-happens-if-you-map-the-same-variable-to-multiple-aesthetics" class="section level2">
+<h2>4. What happens if you map the same variable to multiple aesthetics?</h2>
+<p>The multiple asthetics follow the pattern of the same variable.</p>
+</div>
+<div id="make-a-scatterplot-of-bill_depth_mm-vs.-bill_length_mm-and-color-the-points-by-species.-what-does-adding-coloring-by-species-reveal-about-the-relationship-between-these-two-variables-what-about-faceting-by-species" class="section level2">
+<h2>5. Make a scatterplot of bill_depth_mm vs. bill_length_mm and color the points by species. What does adding coloring by species reveal about the relationship between these two variables? What about faceting by species?</h2>
+<pre class="r"><code>penguins |&gt;
+  ggplot(aes(x = bill_length_mm,
+             y = bill_depth_mm,
+             color = species)) +
+  geom_point()</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>These plots reveal the relationship between these two variables within species.</p>
+</div>
+<div id="why-does-the-following-yield-two-separate-legends-how-would-you-fix-it-to-combine-the-two-legends" class="section level2">
+<h2>6. Why does the following yield two separate legends? How would you fix it to combine the two legends?</h2>
+<p>It’s because the label “Species” is only specified for the <code>color</code> aesthetics. To fix this, we can assign the same label to the <code>shape</code> aesthetics.</p>
+<pre class="r"><code>ggplot(
+  data = penguins,
+  mapping = aes(
+    x = bill_length_mm, y = bill_depth_mm, 
+    color = species, shape = species
+  )
+) +
+  geom_point() +
+  labs(color = &quot;Species&quot;,
+       shape = &quot;Species&quot;)</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+</div>
+<div id="create-the-two-following-stacked-bar-plots.-which-question-can-you-answer-with-the-first-one-which-question-can-you-answer-with-the-second-one" class="section level2">
+<h2>7. Create the two following stacked bar plots. Which question can you answer with the first one? Which question can you answer with the second one?</h2>
+<pre class="r"><code>ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar(position = &quot;fill&quot;)</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(penguins, aes(x = species, fill = island)) +
+  geom_bar(position = &quot;fill&quot;)</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-24-2.png" width="672" /></p>
+<p>In the first one, we can answer which of the species is the most prevalent within each island. In the second plot, we can answer which island is the most popular place within species.</p>
+</div>
+</div>
+<div id="exercies-2.6.1" class="section level1">
+<h1>Exercies 2.6.1</h1>
+<div id="run-the-following-lines-of-code.-which-of-the-two-plots-is-saved-as-mpg-plot.png-why" class="section level2">
+<h2>1. Run the following lines of code. Which of the two plots is saved as mpg-plot.png? Why?</h2>
+<pre class="r"><code>ggplot(mpg, aes(x = class)) +
+  geom_bar()
+ggplot(mpg, aes(x = cty, y = hwy)) +
+  geom_point()
+ggsave(&quot;mpg-plot.png&quot;)</code></pre>
+<p>The second plot will be saved because it will be the most recent plot.</p>
+</div>
+<div id="what-do-you-need-to-change-in-the-code-above-to-save-the-plot-as-a-pdf-instead-of-a-png-how-could-you-find-out-what-types-of-image-files-would-work-in-ggsave" class="section level2">
+<h2>2. What do you need to change in the code above to save the plot as a PDF instead of a PNG? How could you find out what types of image files would work in ggsave()?</h2>
+<p>We can just change the extension of the output file name to have <code>.pdf</code>.</p>
+<p>See the <code>device</code> for allowed file types.</p>
+<pre class="r"><code>ggplot(mpg, aes(x = cty, y = hwy)) +
+  geom_point()</code></pre>
+<p><img src="/2023/05/18/chapter-2/index_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<pre class="r"><code>ggsave(&quot;mpg-plot.pdf&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+</div>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+
